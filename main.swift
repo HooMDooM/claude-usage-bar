@@ -1091,11 +1091,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             [weak self] _ in
             if self?.panel.isVisible == true {
                 self?.panel.orderOut(nil)
-                self?.statusItem.button?.highlight(false)
+                self?.setButtonActive(false)
             }
         }
 
         vm.scanAndReload()
+    }
+
+    func setButtonActive(_ active: Bool) {
+        guard let btn = statusItem.button else { return }
+        btn.wantsLayer = true
+        if active {
+            btn.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.15).cgColor
+            btn.layer?.cornerRadius = 4
+        } else {
+            btn.layer?.backgroundColor = nil
+        }
     }
 
     func updateStatusTitle(_ btn: NSStatusBarButton) {
@@ -1121,7 +1132,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let btn = statusItem.button else { return }
         if panel.isVisible {
             panel.orderOut(nil)
-            btn.highlight(false)
+            setButtonActive(false)
             return
         }
         guard let btnWindow = btn.window else { return }
@@ -1139,7 +1150,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         panel.setFrameOrigin(NSPoint(x: x, y: y))
         panel.makeKeyAndOrderFront(nil)
-        btn.highlight(true)
+        setButtonActive(true)
     }
 }
 
