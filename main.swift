@@ -1089,7 +1089,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         monitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) {
             [weak self] _ in
-            if self?.panel.isVisible == true { self?.panel.orderOut(nil) }
+            if self?.panel.isVisible == true {
+                self?.panel.orderOut(nil)
+                self?.statusItem.button?.highlight(false)
+            }
         }
 
         vm.scanAndReload()
@@ -1115,21 +1118,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func toggle() {
+        guard let btn = statusItem.button else { return }
         if panel.isVisible {
             panel.orderOut(nil)
+            btn.highlight(false)
             return
         }
-        guard let btn = statusItem.button, let btnWindow = btn.window else { return }
+        guard let btnWindow = btn.window else { return }
         let btnRect = btn.convert(btn.bounds, to: nil)
         let screenRect = btnWindow.convertToScreen(btnRect)
 
         let pw = panel.frame.width
         let ph = panel.frame.height
-        let x = screenRect.midX - pw / 2
+        var x = screenRect.maxX - pw
         let y = screenRect.minY - ph - 4
+
+        if let screen = NSScreen.main {
+            x = max(screen.visibleFrame.origin.x, x)
+        }
 
         panel.setFrameOrigin(NSPoint(x: x, y: y))
         panel.makeKeyAndOrderFront(nil)
+        btn.highlight(true)
     }
 }
 
