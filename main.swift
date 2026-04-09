@@ -309,13 +309,15 @@ func pctColor(_ p: Double) -> NSColor {
     return .systemRed
 }
 
-func createBarImage(sPct: Double, wPct: Double) -> NSImage {
+func createBarImage(sPct: Double, wPct: Double, active: Bool = false) -> NSImage {
     let w: CGFloat = 30, h: CGFloat = 18
     let bh: CGFloat = 5, gap: CGFloat = 3, pad: CGFloat = 2, cr: CGFloat = 2
 
     let img = NSImage(size: NSSize(width: w, height: h))
     img.lockFocus()
-    let bg = NSColor(white: 0.3, alpha: 1.0)
+    let bg = active ? NSColor(white: 0.5, alpha: 1.0) : NSColor(white: 0.3, alpha: 1.0)
+    let sColor = active ? NSColor.white : pctColor(sPct)
+    let wColor = active ? NSColor.white : pctColor(wPct)
 
     // Top bar = session (5h)
     let sy = h - bh - pad
@@ -323,7 +325,7 @@ func createBarImage(sPct: Double, wPct: Double) -> NSImage {
     NSBezierPath(roundedRect: NSRect(x: 0, y: sy, width: w, height: bh), xRadius: cr, yRadius: cr).fill()
     let sw = max(3, min(w, w * CGFloat(min(sPct, 1.0))))
     if sPct > 0 {
-        pctColor(sPct).setFill()
+        sColor.setFill()
         NSBezierPath(roundedRect: NSRect(x: 0, y: sy, width: sw, height: bh), xRadius: cr, yRadius: cr).fill()
     }
 
@@ -333,7 +335,7 @@ func createBarImage(sPct: Double, wPct: Double) -> NSImage {
     NSBezierPath(roundedRect: NSRect(x: 0, y: wy, width: w, height: bh), xRadius: cr, yRadius: cr).fill()
     let ww = max(3, min(w, w * CGFloat(min(wPct, 1.0))))
     if wPct > 0 {
-        pctColor(wPct).setFill()
+        wColor.setFill()
         NSBezierPath(roundedRect: NSRect(x: 0, y: wy, width: ww, height: bh), xRadius: cr, yRadius: cr).fill()
     }
 
@@ -894,10 +896,8 @@ struct LimitBar: View {
                         .frame(width: max(2, geo.size.width * CGFloat(min(pct, 1.0))))
                 }
             }.frame(height: 5)
-            if !resets.isEmpty {
-                Text("Resets in \(resets)")
-                    .font(.system(size: 8)).foregroundColor(.secondary.opacity(0.6))
-            }
+            Text(resets.isEmpty ? " " : "Resets in \(resets)")
+                .font(.system(size: 8)).foregroundColor(.secondary.opacity(0.6))
         }
     }
 }
@@ -1058,7 +1058,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         vm.onUpdate = { [weak self] in
             guard let self = self, let btn = self.statusItem.button else { return }
-            btn.image = createBarImage(sPct: self.vm.limits.sessionPct, wPct: self.vm.limits.weeklyPct)
+            self.updateBarIcon()
             self.updateStatusTitle(btn)
         }
 
@@ -1091,22 +1091,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             [weak self] _ in
             if self?.panel.isVisible == true {
                 self?.panel.orderOut(nil)
-                self?.setButtonActive(false)
+                self?.panelActive = false
+                self?.updateBarIcon()
             }
         }
 
         vm.scanAndReload()
     }
 
-    func setButtonActive(_ active: Bool) {
+    var panelActive = false
+
+    func updateBarIcon() {
         guard let btn = statusItem.button else { return }
-        btn.wantsLayer = true
-        if active {
-            btn.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.15).cgColor
-            btn.layer?.cornerRadius = 4
-        } else {
-            btn.layer?.backgroundColor = nil
-        }
+        btn.image = createBarImage(
+            sPct: vm.limits.sessionPct,
+            wPct: vm.limits.weeklyPct,
+            active: panelActive
+        )
     }
 
     func updateStatusTitle(_ btn: NSStatusBarButton) {
@@ -1132,7 +1133,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let btn = statusItem.button else { return }
         if panel.isVisible {
             panel.orderOut(nil)
-            setButtonActive(false)
+            panelActive = false
+            updateBarIcon()
             return
         }
         guard let btnWindow = btn.window else { return }
@@ -1150,7 +1152,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         panel.setFrameOrigin(NSPoint(x: x, y: y))
         panel.makeKeyAndOrderFront(nil)
-        setButtonActive(true)
+        panelActive = true
+        updateBarIcon()
     }
 }
 
