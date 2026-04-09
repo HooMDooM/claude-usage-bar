@@ -254,6 +254,31 @@ func fetchCostInWindow(_ hours: Int) -> Double {
     """).reduce(0.0) { $0 + costOf(inp: i64($1,1), out: i64($1,2), cr: i64($1,3), cw: i64($1,4), m: str($1,0)) }
 }
 
+func fmtTimeLeft(_ seconds: Int) -> String {
+    if seconds <= 0 { return "" }
+    let h = seconds / 3600; let m = (seconds % 3600) / 60
+    if h >= 24 { return "\(h/24)d \(h%24)h" }
+    return "\(h)h \(m)m"
+}
+
+func fetchOldestTurnAge(_ hours: Int) -> Int {
+    // Returns seconds remaining until the window resets (windowSize - age of oldest turn)
+    let rows = dbRun("""
+        SELECT MIN(timestamp) FROM turns
+        WHERE datetime(timestamp,'localtime') >= datetime('now','-\(hours) hours','localtime')
+    """)
+    guard let ts = rows.first?.first as? String, !ts.isEmpty else { return 0 }
+    let fmt = ISO8601DateFormatter()
+    fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    let fmt2 = ISO8601DateFormatter()
+    fmt2.formatOptions = [.withInternetDateTime]
+    if let d = fmt.date(from: ts) ?? fmt2.date(from: ts) {
+        let age = Int(Date().timeIntervalSince(d))
+        return max(0, hours * 3600 - age)
+    }
+    return 0
+}
+
 func fetchLimits() -> LimitInfo {
     let cfg = loadPlanCfg()
     var info = LimitInfo(plan: cfg.plan)
@@ -263,6 +288,10 @@ func fetchLimits() -> LimitInfo {
     let wc = fetchCostInWindow(168)
     info.sessionPct = cfg.sessionLimit > 0 ? min(sc / cfg.sessionLimit, 1.0) : 0
     info.weeklyPct  = cfg.weeklyLimit > 0  ? min(wc / cfg.weeklyLimit, 1.0)  : 0
+
+    // Calculate reset times from oldest turn in window
+    info.sessionReset = fmtTimeLeft(fetchOldestTurnAge(5))
+    info.weeklyReset  = fmtTimeLeft(fetchOldestTurnAge(168))
 
     // Try reading OpenUsage cache for more accurate data (optional)
     let ouPath = (NSHomeDirectory() as NSString)
@@ -1093,6 +1122,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.panel.orderOut(nil)
                 self?.panelActive = false
                 self?.updateBarIcon()
+                if let btn = self?.statusItem.button { self?.updateStatusTitle(btn) }
             }
         }
 
@@ -1116,15 +1146,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let str = NSMutableAttributedString()
         str.append(NSAttributedString(string: " \(plan) ", attributes: [
             .font: NSFont.monospacedSystemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: NSColor.secondaryLabelColor
+            .foregroundColor: panelActive ? NSColor.white.withAlphaComponent(0.9) : NSColor.secondaryLabelColor
         ]))
         str.append(NSAttributedString(string: "│ ", attributes: [
             .font: NSFont.systemFont(ofSize: 10),
-            .foregroundColor: NSColor.tertiaryLabelColor
+            .foregroundColor: panelActive ? NSColor.white.withAlphaComponent(0.5) : NSColor.tertiaryLabelColor
         ]))
         str.append(NSAttributedString(string: cost, attributes: [
             .font: NSFont.monospacedSystemFont(ofSize: 12, weight: .bold),
-            .foregroundColor: NSColor.systemGreen
+            .foregroundColor: panelActive ? NSColor.white : NSColor.systemGreen
         ]))
         btn.attributedTitle = str
     }
@@ -1135,6 +1165,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             panel.orderOut(nil)
             panelActive = false
             updateBarIcon()
+            updateStatusTitle(btn)
             return
         }
         guard let btnWindow = btn.window else { return }
@@ -1154,6 +1185,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         panel.makeKeyAndOrderFront(nil)
         panelActive = true
         updateBarIcon()
+        updateStatusTitle(btn)
     }
 }
 
