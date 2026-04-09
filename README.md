@@ -1,7 +1,7 @@
 # Claude Usage Bar
 
 <p align="center">
-  <img src="screenshots/statusbar.png" alt="Status Bar" height="28">
+  <img src="screenshots/collapsed.jpg" alt="Claude Usage Bar" width="420">
 </p>
 
 **Native macOS menu bar app for tracking Claude Code token usage, costs, and rate limits.**
@@ -20,7 +20,7 @@ No Electron. No web server. One Swift file, zero dependencies. Just build and ru
 **Click to open dashboard:**
 
 <p align="center">
-  <img src="screenshots/collapsed.png" alt="Collapsed View" width="420">
+  <img src="screenshots/collapsed.jpg" alt="Collapsed View" width="420">
 </p>
 
 - Cost breakdown by period (Today / Yesterday / 7d / 30d / All time)
@@ -33,7 +33,7 @@ No Electron. No web server. One Swift file, zero dependencies. Just build and ru
 **Expand for the full picture:**
 
 <p align="center">
-  <img src="screenshots/expanded.png" alt="Expanded View" width="420">
+  <img src="screenshots/expanded.jpg" alt="Expanded View" width="420">
 </p>
 
 Smooth expand/collapse animation. All data, no scrollbar.
