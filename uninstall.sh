@@ -2,6 +2,8 @@
 
 APP_NAME="Claude Usage"
 
+echo "Uninstalling Claude Usage..."
+
 pkill -f ClaudeUsageBar 2>/dev/null || true
 
 # Remove Login Item
@@ -11,9 +13,18 @@ osascript -e "
             delete login item \"$APP_NAME\"
         end if
     end tell
-" 2>/dev/null
+" 2>/dev/null || true
 
 rm -rf "$HOME/Applications/$APP_NAME.app"
 rm -f "$HOME/.claude/usage-bar.json"
+rm -rf "$HOME/.claude-usage-scanner"
+rm -f "$HOME/.claude/usage.db"
 
-echo "Claude Usage uninstalled."
+echo ""
+echo "  ✓ App removed"
+echo "  ✓ Login Item removed"
+echo "  ✓ Scanner removed"
+echo "  ✓ Config removed"
+echo ""
+echo "  Claude Usage has been fully uninstalled."
+echo ""

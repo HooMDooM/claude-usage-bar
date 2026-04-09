@@ -52,42 +52,24 @@ Smooth expand/collapse animation. All data, no scrollbar.
 
 ---
 
-## Requirements
-
-- macOS 14.0+ (Sonoma or later)
-- Xcode Command Line Tools (`xcode-select --install`)
-- Python 3 (comes with macOS / Xcode CLT)
-- [claude-usage](https://github.com/phuryn/claude-usage) scanner (for the SQLite database)
-
----
-
 ## Install
 
-### 1. Set up the scanner
-
-Claude Code writes JSONL logs to `~/.claude/projects/`. The [claude-usage](https://github.com/phuryn/claude-usage) scanner parses them into a SQLite database:
+One command. The installer handles everything automatically:
 
 ```bash
-git clone https://github.com/phuryn/claude-usage ~/.claude-usage-scanner
-cd ~/.claude-usage-scanner
-python3 cli.py scan
+git clone https://github.com/HooMDooM/claude-usage-bar && cd claude-usage-bar && ./install.sh
 ```
 
-### 2. Install the menu bar app
+**What the installer does:**
+1. Checks for Xcode Command Line Tools (prompts to install if missing)
+2. Checks for Python 3
+3. Downloads and runs the [token scanner](https://github.com/phuryn/claude-usage) automatically
+4. Compiles the Swift app
+5. Installs to `~/Applications/`
+6. Adds to Login Items (auto-start on boot)
+7. Launches the app
 
-```bash
-git clone https://github.com/HooMDooM/claude-usage-bar
-cd claude-usage-bar
-./install.sh --login
-```
-
-That's it. The app appears in your menu bar.
-
-### One-liner
-
-```bash
-git clone https://github.com/HooMDooM/claude-usage-bar && cd claude-usage-bar && ./install.sh --login
-```
+**Requirements:** macOS 14+ (Sonoma or later). Everything else is installed automatically.
 
 ---
 
