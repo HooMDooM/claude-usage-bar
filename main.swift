@@ -1146,15 +1146,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let str = NSMutableAttributedString()
         str.append(NSAttributedString(string: " \(plan) ", attributes: [
             .font: NSFont.monospacedSystemFont(ofSize: 11, weight: .medium),
-            .foregroundColor: panelActive ? NSColor.white.withAlphaComponent(0.9) : NSColor.secondaryLabelColor
+            .foregroundColor: panelActive ? NSColor.systemGreen.withAlphaComponent(0.9) : NSColor.secondaryLabelColor
         ]))
         str.append(NSAttributedString(string: "│ ", attributes: [
             .font: NSFont.systemFont(ofSize: 10),
-            .foregroundColor: panelActive ? NSColor.white.withAlphaComponent(0.5) : NSColor.tertiaryLabelColor
+            .foregroundColor: panelActive ? NSColor.systemGreen.withAlphaComponent(0.5) : NSColor.tertiaryLabelColor
         ]))
         str.append(NSAttributedString(string: cost, attributes: [
             .font: NSFont.monospacedSystemFont(ofSize: 12, weight: .bold),
-            .foregroundColor: panelActive ? NSColor.white : NSColor.systemGreen
+            .foregroundColor: panelActive ? NSColor.systemGreen : NSColor.white
         ]))
         btn.attributedTitle = str
     }
