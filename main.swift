@@ -283,48 +283,16 @@ func fetchLimits() -> LimitInfo {
     let cfg = loadPlanCfg()
     var info = LimitInfo(plan: cfg.plan)
 
-    // Calculate from local token data
+    // Calculate everything from local token data
     let sc = fetchCostInWindow(5)
     let wc = fetchCostInWindow(168)
     info.sessionPct = cfg.sessionLimit > 0 ? min(sc / cfg.sessionLimit, 1.0) : 0
     info.weeklyPct  = cfg.weeklyLimit > 0  ? min(wc / cfg.weeklyLimit, 1.0)  : 0
 
-    // Calculate reset times from oldest turn in window
+    // Reset times = window remaining from oldest turn
     info.sessionReset = fmtTimeLeft(fetchOldestTurnAge(5))
     info.weeklyReset  = fmtTimeLeft(fetchOldestTurnAge(168))
 
-    // Try reading OpenUsage cache for more accurate data (optional)
-    let ouPath = (NSHomeDirectory() as NSString)
-        .appendingPathComponent("Library/Application Support/com.sunstory.openusage/usage-api-cache.json")
-    if let data = try? Data(contentsOf: URL(fileURLWithPath: ouPath)),
-       let j = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-       let snaps = j["snapshots"] as? [String: Any],
-       let claude = snaps["claude"] as? [String: Any],
-       let lines = claude["lines"] as? [[String: Any]] {
-
-        info.plan = claude["plan"] as? String ?? cfg.plan
-
-        let fmt = ISO8601DateFormatter()
-        fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let now = Date()
-
-        for line in lines {
-            guard line["type"] as? String == "progress",
-                  let label = line["label"] as? String,
-                  let used = line["used"] as? Double else { continue }
-            let pct = used / 100.0
-            var rs = ""
-            if let rStr = line["resetsAt"] as? String, let rd = fmt.date(from: rStr) {
-                let s = Int(rd.timeIntervalSince(now))
-                if s > 0 {
-                    let h = s / 3600; let m = (s % 3600) / 60
-                    rs = h >= 24 ? "\(h/24)d \(h%24)h" : "\(h)h \(m)m"
-                }
-            }
-            if label == "Session" { info.sessionPct = pct; info.sessionReset = rs }
-            else if label == "Weekly" { info.weeklyPct = pct; info.weeklyReset = rs }
-        }
-    }
     return info
 }
 
